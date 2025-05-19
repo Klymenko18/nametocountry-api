@@ -7,14 +7,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Name, NameCountryLink
-from .serializers import NameCountryLinkSerializer
+from .serializer import NameCountryLinkSerializer
 from .services import (
     get_or_create_name,
     get_fresh_links_for_name,
     fetch_and_save_nationalities,
 )
+from rest_framework.permissions import AllowAny
 
 class NameNationalityAPIView(APIView):
+      permission_classes = [AllowAny]
+      
       def get(self, request):
             name_param = request.query_params.get("name")
             if not name_param:
@@ -38,6 +41,7 @@ class NameNationalityAPIView(APIView):
 
 
 class TopNamesByCountryAPIView(APIView):
+      permission_classes = [AllowAny]
       def get(self, request):
             country_code = request.query_params.get("country")
             if not country_code:
