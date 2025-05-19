@@ -34,13 +34,13 @@ def get_or_create_country(code):
     country, created = Country.objects.get_or_create(code=code)
     if created or not country.name:
         data = fetch_country_data(code)
-        for field, value in data.items():
-            setattr(country, field, value)
+        for field, name in data.items():
+            setattr(country, field, name)
         country.save()
     return country
 
 def get_or_create_name(name_value):
-    name_obj, _ = Name.objects.get_or_create(value__iexact=name_value, defaults={"value": name_value})
+    name_obj, _ = Name.objects.get_or_create(value__iexact=name_value, defaults={"name": name_value})
     name_obj.count_of_request += 1
     name_obj.last_accessed = timezone.now()
     name_obj.save()

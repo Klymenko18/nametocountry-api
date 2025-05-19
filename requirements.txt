@@ -8,3 +8,4 @@ python-dotenv
 djangorestframework-simplejwt
 requests
 django-cors-headers
+drf-yasg
