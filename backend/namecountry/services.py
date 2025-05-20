@@ -11,45 +11,57 @@ def fetch_country_data(code):
     if resp.status_code == 200 and resp.json():
         data = resp.json()[0]
         return {
-            "name": data.get("name", {}).get("common", ""),
-            "official_name": data.get("name", {}).get("official", ""),
+            "country": ",".join([
+                data.get("cca2", ""),
+                data.get("name", {}).get("common", ""),
+                data.get("name", {}).get("official", "")
+            ]),
             "region": data.get("region", ""),
-            "subregion": data.get("subregion", ""),
-            "independent": data.get("independent"),
+            "independent": str(data.get("independent", "")),
             "google_maps": data.get("maps", {}).get("googleMaps", ""),
             "open_street_map": data.get("maps", {}).get("openStreetMaps", ""),
-            "capital": data.get("capital", [""])[0] if data.get("capital") else "",
-            "capital_lat": str(data.get("capitalInfo", {}).get("latlng", ["", ""])[0]) if data.get("capitalInfo", {}).get("latlng") else "",
-            "capital_lng": str(data.get("capitalInfo", {}).get("latlng", ["", ""])[1]) if len(data.get("capitalInfo", {}).get("latlng", [])) > 1 else "",
+            "capital_name": data.get("capital", [""])[0] if data.get("capital") else "",
+            "capital_coordinates": (
+                ",".join([str(x) for x in data.get("capitalInfo", {}).get("latlng", ["", ""])])
+                if data.get("capitalInfo", {}).get("latlng") else ""
+            ),
             "flag_png": data.get("flags", {}).get("png", ""),
             "flag_svg": data.get("flags", {}).get("svg", ""),
             "flag_alt": data.get("flags", {}).get("alt", ""),
             "coat_of_arms_png": data.get("coatOfArms", {}).get("png", ""),
             "coat_of_arms_svg": data.get("coatOfArms", {}).get("svg", ""),
-            "borders": ",".join(data.get("borders", [])),
+            "borders_with": ",".join(data.get("borders", [])),
         }
     return {}
 
+
 def get_or_create_country(code):
-    country, created = Country.objects.get_or_create(code=code)
-    if created or not country.name:
-        data = fetch_country_data(code)
-        for field, name in data.items():
-            setattr(country, field, name)
+    data = fetch_country_data(code)
+    country_field = data.get("country", "")  
+    if not country_field:
+        return None
+    country, created = Country.objects.get_or_create(country=country_field)
+    if created or not country.region:
+        for field, value in data.items():
+            if hasattr(country, field):
+                setattr(country, field, value)
         country.save()
     return country
 
+
 def get_or_create_name(name_value):
-    name_obj, _ = Name.objects.get_or_create(value__iexact=name_value, defaults={"name": name_value})
-    name_obj.count_of_request += 1
+    name_obj, _ = Name.objects.get_or_create(name__iexact=name_value, defaults={"name": name_value})
+    name_obj.count_of_requests += 1
     name_obj.last_accessed = timezone.now()
     name_obj.save()
     return name_obj
+
 
 def get_fresh_links_for_name(name_obj):
     if name_obj.last_accessed and name_obj.last_accessed >= timezone.now() - timedelta(days=1):
         return NameCountryLink.objects.filter(name=name_obj)
     return None
+
 
 def fetch_and_save_nationalities(name_param, name_obj):
     response = requests.get(NATIONALIZE_URL.format(name=name_param))

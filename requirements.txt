@@ -9,3 +9,4 @@ djangorestframework-simplejwt
 requests
 django-cors-headers
 drf-yasg
+pytest

@@ -7,7 +7,7 @@ class Name(models.Model):
     def __str__(self): return self.name
 
 class Country(models.Model):
-    country = models.CharField(max_length=150, verbose_name="Country")
+    country = models.CharField(max_length=512, verbose_name="Country")
     region = models.CharField(max_length=100, blank=True, verbose_name="Region")
     independent = models.CharField(max_length=10, blank=True, verbose_name="Independent")
     google_maps = models.URLField(blank=True, verbose_name="Google maps")
